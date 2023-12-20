@@ -31,6 +31,7 @@ class FeedbackHHC:
             if self.type_number(col):
                 self.data[col] = pd.to_numeric(self.data[col], errors='coerce')
                 self.data[col].fillna(0, inplace=True)
+                self.data[col].replace('-', 0, inplace=True)
 
         #inlocuim valorile numerice lipsa cu media
         for col in self.data.columns:
@@ -38,6 +39,19 @@ class FeedbackHHC:
                 self.data[col].fillna(self.data[col].mean(), inplace=True)
 
         # scapam de outlieri
+        numeric_columns = [col for col in self.data.columns if self.type_number(col)]
+        numeric_data = self.data[numeric_columns]
+        numeric_data.apply(pd.to_numeric, errors='coerce')
+
+        Q1 = numeric_data.quantile(0.25)
+        Q3 = numeric_data.quantile(0.75)
+        IQR = Q3 - Q1
+
+        lower_bound = Q1 - 1.5 * IQR
+        upper_bound = Q3 + 1.5 * IQR
+
+        outliers = ((numeric_data < lower_bound) | (numeric_data > upper_bound)).any(axis=1)
+        self.data = self.data[~outliers]
 
 
     def exploratory_analysis(self):

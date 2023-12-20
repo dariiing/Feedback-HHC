@@ -1,7 +1,4 @@
 from FeedbackHHC import FeedbackHHC
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
 
 
 def main():
@@ -9,8 +6,8 @@ def main():
     print("Data before preprocessing:")
     print(data.data)
 
-    data.preprocessdata()
-    data.exploratory_analysis()
+    data.preprocess_data()
+    # data.exploratory_analysis()
 
 
 if __name__ == "__main__":

@@ -1,6 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
+from sklearn.decomposition import PCA
 
 
 class FeedbackHHC:
@@ -120,3 +121,40 @@ class FeedbackHHC:
         #vizualizarea datelor sub forma de histograma
         numeric_data.hist(figsize=(20, 20))
         plt.show()
+
+    def select_attributes(self):
+        # selectam atributele folosind PCA
+        numeric_columns = [col for col in self.data.columns if self.type_number(col)]
+        numeric_data = self.data[numeric_columns]
+        pca=PCA()
+        pca.fit(numeric_data)
+        # calculam variația cumulativă și determinam numarul de componente
+        variatie_cumulativa = np.cumsum(pca.explained_variance_ratio_)
+        numar_componente = np.where(variatie_cumulativa > 0.95)[0][0] + 1
+
+        # aplicam PCA cu numarul optim de componente
+        pca_optim = PCA(n_components=numar_componente)
+        pca_optim.fit(numeric_data)
+
+        # afisam atributele selectate
+        print("Atributele selectate sunt:")
+        print("--------------------------------------------------------------------------------------------------------------------------------------------")
+        print()
+        for i in range(numar_componente):
+            print(f"Componenta principală {i + 1}:")
+            component = pca_optim.components_[i]
+            importance = pd.Series(component, index=numeric_columns)
+            print(importance.sort_values(ascending=False))
+            print()
+
+        #vizualizarea atributelor selectate
+        plt.figure(figsize=(10, 6))
+        plt.plot(np.cumsum(pca.explained_variance_ratio_), marker='o', linestyle='--')
+        plt.xlabel('Numărul de componente')
+        plt.ylabel('Variația explicată cumulativ')
+        plt.title('Variația cumulată a varianței explicată')
+        plt.grid()
+        plt.show()
+
+
+

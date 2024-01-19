@@ -4,7 +4,7 @@ from sklearn.metrics import roc_curve, auc, accuracy_score, confusion_matrix, ro
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import mean_absolute_error, \
     r2_score
-from sklearn.ensemble import  RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -24,6 +24,7 @@ from sklearn.metrics import mean_squared_error
 import torch
 import torch.nn as nn
 import numpy as np
+
 
 class FeedbackHHC:
     def __init__(self, file_path):
@@ -186,6 +187,7 @@ class FeedbackHHC:
         plt.title('Cumulative Variation of Explained Variance')
         plt.grid()
         plt.show()
+        return pca_optim.explained_variance_ratio_
 
     def train_random_forest_regressor(self):
         X = self.data.drop('Quality of patient care star rating', axis=1)
@@ -492,7 +494,6 @@ class FeedbackHHC:
         plt.tight_layout()
         plt.show()
 
-
     def train_neural_network_classifier(self, batch_size=32):
 
         X = self.data.drop('Quality of patient care star rating', axis=1)
@@ -690,4 +691,3 @@ class FeedbackHHC:
         plt.title('Receiver Operating Characteristic Curve - Random Forest vs SVM vs Decision Tree (Multi-Class)')
         plt.legend(loc='lower right')
         plt.show()
-

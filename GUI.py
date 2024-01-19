@@ -6,6 +6,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 from FeedbackHHC import FeedbackHHC
 
+
 class FeedbackHHCInterfaceGUI:
     def __init__(self, master):
         self.master = master
@@ -59,6 +60,8 @@ class FeedbackHHCInterfaceGUI:
         if self.feedback_hhc:
             self.feedback_hhc.preprocess_data()
             messagebox.showinfo("Success", "Data preprocessed successfully!")
+        else:
+            messagebox.showinfo("Error", "An error occured at data preprocessing!")
 
     def explore_data(self):
         if self.feedback_hhc:
@@ -66,7 +69,19 @@ class FeedbackHHCInterfaceGUI:
 
     def select_attributes_pca(self):
         if self.feedback_hhc:
-            self.feedback_hhc.select_attributes_pca()
+            pca_results = self.feedback_hhc.select_attributes_pca()
+            self.ax.clear()
+
+            # Plot the explained variance ratio of each principal component
+            self.ax.plot(np.arange(len(pca_results)), pca_results, marker='o')
+
+            # Set the title and labels
+            self.ax.set_title('PCA Results')
+            self.ax.set_xlabel('Principal Component')
+            self.ax.set_ylabel('Explained Variance Ratio')
+
+            # Update the GUI
+            self.canvas.draw()
 
     def train_random_forest_regressor(self):
         if self.feedback_hhc:
@@ -77,10 +92,8 @@ class FeedbackHHCInterfaceGUI:
             self.feedback_hhc.train_random_forest_classifier()
 
     def update_plot(self):
-        # Clear previous plot
         self.ax.clear()
 
-        # Your plotting code here
         numeric_columns = self.feedback_hhc.data.select_dtypes(include=np.number).columns
         numeric_data = self.feedback_hhc.data[numeric_columns]
 
@@ -88,14 +101,16 @@ class FeedbackHHCInterfaceGUI:
         print("\nThe median for the attributes:\n", numeric_data.median())
 
         for col in numeric_columns:
-            numeric_data[col].hist(bins=20, color='lightpink', edgecolor='black', ax=self.ax)
+            self.ax.hist(numeric_data[col], bins=20, color='lightpink', edgecolor='black')
             self.ax.set_title(col)
 
-        # Redraw the canvas
         self.canvas.draw()
 
     def explore_data_with_plot(self):
         self.update_plot()
+
+
+
 
 if __name__ == "__main__":
     root = tk.Tk()

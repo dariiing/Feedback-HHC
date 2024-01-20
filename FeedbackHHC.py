@@ -150,9 +150,7 @@ class FeedbackHHC:
             plt.figure(figsize=(6, 4))
             numeric_data[col].hist(bins=20, color='lightpink', edgecolor='black')
             plt.title(col)
-            plt.show(block=False)
             plt.show()
-            plt.pause(0.1)
 
     def select_attributes_pca(self):
         numeric_columns = self.data.select_dtypes(include=np.number).columns

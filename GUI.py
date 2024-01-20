@@ -1,3 +1,4 @@
+import time
 import tkinter as tk
 from tkinter import filedialog, messagebox
 import numpy as np
@@ -11,6 +12,8 @@ class FeedbackHHCInterfaceGUI:
     def __init__(self, master):
         self.master = master
         self.master.title("FeedbackHHC GUI")
+
+        self.plot_index = 0
 
         self.feedback_hhc = None
         self.file_path = None
@@ -91,24 +94,30 @@ class FeedbackHHCInterfaceGUI:
         if self.feedback_hhc:
             self.feedback_hhc.train_random_forest_classifier()
 
-    def update_plot(self):
-        self.ax.clear()
-
-        numeric_columns = self.feedback_hhc.data.select_dtypes(include=np.number).columns
-        numeric_data = self.feedback_hhc.data[numeric_columns]
-
-        print("The average for the attributes:\n", numeric_data.mean())
-        print("\nThe median for the attributes:\n", numeric_data.median())
-
-        for col in numeric_columns:
+    def update_plot(self, numeric_columns, numeric_data, index=0):
+        if index < len(numeric_columns):
+            col = numeric_columns[index]
+            self.ax.clear()
             self.ax.hist(numeric_data[col], bins=20, color='lightpink', edgecolor='black')
             self.ax.set_title(col)
+            self.canvas.draw()
 
-        self.canvas.draw()
+            # Add a delay between each plot (adjust the sleep duration as needed)
+            self.master.after(1000, lambda: self.update_plot(numeric_columns, numeric_data, index + 1))
+        else:
+            # After the last plot, update the GUI
+            self.master.update()
 
     def explore_data_with_plot(self):
-        self.update_plot()
+        if self.feedback_hhc:
+            numeric_columns = self.feedback_hhc.data.select_dtypes(include=np.number).columns
+            numeric_data = self.feedback_hhc.data[numeric_columns]
 
+            print("The average for the attributes:\n", numeric_data.mean())
+            print("\nThe median for the attributes:\n", numeric_data.median())
+
+            # Start the slideshow with a delay of 1 second between each plot
+            self.update_plot(numeric_columns, numeric_data)
 
 
 

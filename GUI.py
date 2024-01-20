@@ -26,47 +26,49 @@ class FeedbackHHCInterfaceGUI:
         style = ttk.Style()
         style.configure("TButton", padding=(10, 5, 10, 5), font=('Helvetica', 10))
 
-        self.load_data_button = ttk.Button(button_frame, text="Load Data", command=self.load_data)
+        self.load_data_button = ttk.Button(button_frame, text="Load Data", command=self.load_data, width=25)
         self.load_data_button.pack(pady=10, anchor="w", ipadx=5)
 
-        self.preprocess_data_button = ttk.Button(button_frame, text="Preprocess Data", command=self.preprocess_data)
+        self.preprocess_data_button = ttk.Button(button_frame, text="Preprocess Data", command=self.preprocess_data,
+                                                 width=25)
         self.preprocess_data_button.pack(pady=10, anchor="w", ipadx=5)
 
         self.explore_data_button = ttk.Button(button_frame, text="Exploratory Analysis",
-                                              command=self.explore_data_with_plot)
+                                              command=self.explore_data_with_plot, width=25)
         self.explore_data_button.pack(pady=10, anchor="w", ipadx=5)
 
         self.select_attributes_button = ttk.Button(button_frame, text="Select Attributes using PCA",
-                                                   command=self.select_attributes_pca)
+                                                   command=self.select_attributes_pca, width=25)
         self.select_attributes_button.pack(pady=10, anchor="w", ipadx=5)
 
         self.train_regressor_button = ttk.Button(button_frame, text="Train Random Forest Regressor",
-                                                 command=self.train_random_forest_regressor)
+                                                 command=self.train_random_forest_regressor, width=25)
         self.train_regressor_button.pack(pady=10, anchor="w", ipadx=5)
 
         self.train_classifier_button = ttk.Button(button_frame, text="Train Random Forest Classifier",
-                                                  command=self.train_random_forest_classifier)
+                                                  command=self.train_random_forest_classifier, width=25)
         self.train_classifier_button.pack(pady=10, anchor="w", ipadx=5)
 
         self.train_svm_classifier_button = ttk.Button(button_frame, text="Train SVM Classifier",
-                                                      command=self.train_svm_classifier)
+                                                      command=self.train_svm_classifier, width=25)
         self.train_svm_classifier_button.pack(pady=10, anchor="w", ipadx=5)
 
         self.train_decision_tree_classifier_button = ttk.Button(button_frame, text="Train Decision Tree Classifier",
-                                                                command=self.train_decision_tree_classifier)
+                                                                command=self.train_decision_tree_classifier, width=25)
         self.train_decision_tree_classifier_button.pack(pady=10, anchor="w", ipadx=5)
 
         self.train_neural_network_classifier_button = ttk.Button(button_frame, text="Train Neural Network Classifier",
-                                                                 command=self.train_neural_network_classifier)
+                                                                 command=self.train_neural_network_classifier, width=25)
         self.train_neural_network_classifier_button.pack(pady=10, anchor="w", ipadx=5)
 
         self.compare_models_performance_button = ttk.Button(button_frame, text="Compare Models Performance",
-                                                            command=self.compare_models_performance)
+                                                            command=self.compare_models_performance, width=25)
         self.compare_models_performance_button.pack(pady=10, anchor="w", ipadx=5)
 
         self.compare_models_performance_multiclass_button = ttk.Button(button_frame,
                                                                        text="Compare Models Performance (Multi-Class)",
-                                                                       command=self.compare_models_performance_multiclass)
+                                                                       command=self.compare_models_performance_multiclass,
+                                                                       width=25)
         self.compare_models_performance_multiclass_button.pack(pady=10, anchor="w", ipadx=5)
 
         plot_frame = tk.Frame(main_frame)

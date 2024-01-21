@@ -3,7 +3,9 @@ from tkinter import filedialog, messagebox
 from tkinter import ttk
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from sklearn.metrics import roc_curve, auc, roc_auc_score
 
 from FeedbackHHC import FeedbackHHC
 
@@ -14,6 +16,8 @@ class FeedbackHHCInterfaceGUI:
         self.master.title("FeedbackHHC")
 
         self.pca_plot = 0
+        self.rf_plot = 0
+        self.rfc_plot = 0
         self.style = ttk.Style()
         self.style.theme_use("clam")
 
@@ -45,7 +49,11 @@ class FeedbackHHCInterfaceGUI:
                                                  command=self.train_random_forest_regressor, width=25)
         self.train_regressor_button.pack(pady=10, anchor="w", ipadx=5)
 
-        self.train_classifier_button = ttk.Button(button_frame, text="Train Random Forest Classifier",
+        self.train_classifier_button = ttk.Button(button_frame, text="ROC(Random Forest Regressor)",
+                                                  command=self.train_random_forest_classifier_multiclass, width=25)
+        self.train_classifier_button.pack(pady=10, anchor="w", ipadx=5)
+
+        self.train_classifier_button = ttk.Button(button_frame, text="ROC(Random Forest Classifier)",
                                                   command=self.train_random_forest_classifier, width=25)
         self.train_classifier_button.pack(pady=10, anchor="w", ipadx=5)
 
@@ -103,6 +111,8 @@ class FeedbackHHCInterfaceGUI:
             print("\nThe median for the attributes:\n", numeric_data.median())
 
             self.pca_plot = 0
+            self.rf_plot = 0
+            self.rfc_plot = 0
 
             self.update_plot(numeric_columns, numeric_data)
 
@@ -119,9 +129,11 @@ class FeedbackHHCInterfaceGUI:
 
             self.canvas.draw()
             self.pca_plot = 1
+            self.rf_plot = 0
+            self.rfc_plot = 0
 
     def update_plot(self, numeric_columns, numeric_data, index=0):
-        if index < len(numeric_columns) and self.pca_plot == 0:
+        if index < len(numeric_columns) and self.pca_plot == 0 and self.rf_plot == 0 and self.rfc_plot == 0:
             col = numeric_columns[index]
 
             self.ax.clear()
@@ -137,11 +149,83 @@ class FeedbackHHCInterfaceGUI:
 
     def train_random_forest_regressor(self):
         if self.feedback_hhc:
-            self.feedback_hhc.train_random_forest_regressor()
+            self.pca_plot = 0
+            self.rfc_plot = 0
+            results = self.feedback_hhc.train_random_forest_regressor()
+            y_test = results['y_test']
+            y_pred_rounded = results['y_pred_rounded']
+            mae = results['mae']
+            r2 = results['r2']
+
+            self.ax.clear()
+
+            self.ax.scatter(y_test, y_pred_rounded, color='blue')
+            self.ax.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], linestyle='--', color='red',
+                         linewidth=2)
+            self.ax.set_xlabel('Actual Values')
+            self.ax.set_ylabel('Predicted Values (Rounded)')
+            self.ax.set_title(
+                f'Actual vs Predicted Values - Random Forest Regressor (Rounded)\nMAE: {mae:.2f}, R2: {r2:.2f}')
+
+            self.canvas.draw()
+            self.rf_plot = 1
 
     def train_random_forest_classifier(self):
         if self.feedback_hhc:
-            self.feedback_hhc.train_random_forest_classifier()
+            results = self.feedback_hhc.train_random_forest_classifier()
+            y_test = results['y_test']
+            y_pred_prob = results['y_pred_prob']
+            accuracy = results['accuracy']
+            conf_matrix = results['conf_matrix']
+
+            fpr_0, tpr_0, _ = roc_curve(y_test, y_pred_prob[:, 0])
+            roc_auc_0 = auc(fpr_0, tpr_0)
+
+            fpr_1, tpr_1, _ = roc_curve(y_test, y_pred_prob[:, 1])
+            roc_auc_1 = auc(fpr_1, tpr_1)
+
+            self.ax.clear()
+            self.ax.plot(fpr_0, tpr_0, color='darkorange', lw=2, label='AUC(Class 0) (area = %0.2f)' % roc_auc_0)
+            self.ax.plot(fpr_1, tpr_1, color='green', lw=2, label='AUC(Class 1) (area = %0.2f)' % roc_auc_1)
+            self.ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+            self.ax.set_xlabel('False Positive Rate')
+            self.ax.set_ylabel('True Positive Rate')
+            self.ax.set_title(f'Receiver operating characteristic \nAccuracy: {accuracy:.2f} , Confusion Matrix: \n{conf_matrix}')
+            self.ax.legend(loc="lower right")
+            self.canvas.draw()
+
+            self.rfc_plot = 1
+            self.rf_plot = 0
+            self.pca_plot = 0
+
+    def train_random_forest_classifier_multiclass(self):
+        if self.feedback_hhc:
+            results = self.feedback_hhc.train_random_forest_classifier_multiclass()
+            y = results['y']
+            y_test = results['y_test']
+            y_pred_prob = results['y_pred_prob']
+
+            self.ax.clear()
+            for i in range(len(np.unique(y))):
+                fpr, tpr, _ = roc_curve(y_test[:, i], y_pred_prob[:, i])
+                roc_auc = auc(fpr, tpr)
+                self.ax.plot(fpr, tpr, lw=2, label=f'Class {i} (AUC = {roc_auc:.2f})')
+
+            self.ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+            self.ax.set_xlabel('False Positive Rate')
+            self.ax.set_ylabel('True Positive Rate')
+            self.ax.set_title(f'Receiver operating characteristic')
+            self.ax.legend(loc="lower right")
+            self.canvas.draw()
+
+            classes = np.unique(y)
+            for i in range(len(classes)):
+                class_auc = roc_auc_score(y_test[:, i], y_pred_prob[:, i])
+                print(f"AUC for Class '{classes[i]}': {class_auc:.2%}")
+
+            self.rfc_plot = 1
+            self.rf_plot = 0
+            self.pca_plot = 0
 
     def train_svm_classifier(self):
         if self.feedback_hhc:

@@ -213,16 +213,12 @@ class FeedbackHHC:
         mae = mean_absolute_error(y_test, y_pred)
         r2 = r2_score(y_test, y_pred)
 
-        print(f"Random Forest Regressor Mean Absolute Error: {mae:.2f}")
-        print(f"Random Forest Regressor R2 Score: {r2:.2f}")
-
-        plt.figure(figsize=(10, 6))
-        plt.scatter(y_test, y_pred_rounded, color='blue')
-        plt.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], linestyle='--', color='red', linewidth=2)
-        plt.xlabel('Actual Values')
-        plt.ylabel('Predicted Values (Rounded)')
-        plt.title('Actual vs Predicted Values - Random Forest Regressor (Rounded)')
-        plt.show()
+        return {
+            'y_test': y_test,
+            'y_pred_rounded': y_pred_rounded,
+            'mae': mae,
+            'r2': r2
+        }
 
     def train_random_forest_classifier(self):
         X = self.data.drop('Quality of patient care star rating', axis=1)
@@ -235,23 +231,6 @@ class FeedbackHHC:
 
         y_pred_prob = rf_classifier.predict_proba(X_test)
 
-        fpr_0, tpr_0, _ = roc_curve(y_test, y_pred_prob[:, 0])
-        roc_auc_0 = auc(fpr_0, tpr_0)
-
-        fpr_1, tpr_1, _ = roc_curve(y_test, y_pred_prob[:, 1])
-        roc_auc_1 = auc(fpr_1, tpr_1)
-
-        plt.figure(figsize=(8, 6))
-        plt.plot(fpr_0, tpr_0, color='darkorange', lw=2, label=f'AUC (Class 0) = {roc_auc_0:.2f}')
-        plt.plot(fpr_1, tpr_1, color='green', lw=2, label=f'AUC (Class 1) = {roc_auc_1:.2f}')
-        plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Receiver Operating Characteristic Curve- Random Forest Classifier')
-        plt.legend(loc='lower right')
-        plt.show()
-
-        # Print accuracy and confusion matrix
         y_pred = rf_classifier.predict(X_test)
         accuracy = accuracy_score(y_test, y_pred)
 
@@ -261,6 +240,13 @@ class FeedbackHHC:
                                       columns=['Predicted Negative', 'Predicted Positive'])
         print("Confusion Matrix:")
         print(conf_matrix_df)
+
+        return {
+            'y_test': y_test,
+            'y_pred_prob': y_pred_prob,
+            'accuracy': accuracy,
+            'conf_matrix': conf_matrix
+        }
 
     def train_random_forest_classifier_multiclass(self):
         X = self.data.drop('Quality of patient care star rating', axis=1)
@@ -275,23 +261,11 @@ class FeedbackHHC:
 
         y_pred_prob = rf_classifier.predict_proba(X_test)
 
-        plt.figure(figsize=(8, 6))
-        for i in range(len(np.unique(y))):
-            fpr, tpr, _ = roc_curve(y_test[:, i], y_pred_prob[:, i])
-            roc_auc = auc(fpr, tpr)
-            plt.plot(fpr, tpr, lw=2, label=f'Class {i} (AUC = {roc_auc:.2f})')
-
-        plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Receiver Operating Characteristic Curve - Multi-Class Classification- Random Forest')
-        plt.legend(loc='lower right')
-        plt.show()
-
-        classes = np.unique(y)
-        for i in range(len(classes)):
-            class_auc = roc_auc_score(y_test[:, i], y_pred_prob[:, i])
-            print(f"AUC for Class '{classes[i]}': {class_auc:.2%}")
+        return {
+            'y': y,
+            'y_test': y_test,
+            'y_pred_prob': y_pred_prob
+        }
 
     def train_svm_classifier(self):
         X = self.data.drop('Quality of patient care star rating', axis=1)

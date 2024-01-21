@@ -25,6 +25,8 @@ class FeedbackHHCInterfaceGUI:
         self.svmm_plot = 0
         self.nn_plot = 0
         self.nnc_plot = 0
+        self.cmp_plot = 0
+        self.cmpm_plot = 0
         self.style = ttk.Style()
         self.style.theme_use("clam")
 
@@ -147,6 +149,8 @@ class FeedbackHHCInterfaceGUI:
             self.svmm_plot = 0
             self.nn_plot = 0
             self.nnc_plot = 0
+            self.cmp_plot = 0
+            self.cmpm_plot = 0
 
             self.update_plot(numeric_columns, numeric_data)
 
@@ -172,6 +176,8 @@ class FeedbackHHCInterfaceGUI:
             self.svmm_plot = 0
             self.nn_plot = 0
             self.nnc_plot = 0
+            self.cmp_plot = 0
+            self.cmpm_plot = 0
 
     def update_plot(self, numeric_columns, numeric_data, index=0):
         if index < len(
@@ -201,6 +207,8 @@ class FeedbackHHCInterfaceGUI:
             self.svmm_plot = 0
             self.nn_plot = 0
             self.nnc_plot = 0
+            self.cmp_plot = 0
+            self.cmpm_plot = 0
             results = self.feedback_hhc.train_random_forest_regressor()
             y_test = results['y_test']
             y_pred_rounded = results['y_pred_rounded']
@@ -231,6 +239,8 @@ class FeedbackHHCInterfaceGUI:
             self.svmm_plot = 0
             self.nn_plot = 0
             self.nnc_plot = 0
+            self.cmp_plot = 0
+            self.cmpm_plot = 0
             results = self.feedback_hhc.train_random_forest_classifier()
             y_test = results['y_test']
             y_pred_prob = results['y_pred_prob']
@@ -291,6 +301,8 @@ class FeedbackHHCInterfaceGUI:
             self.svmm_plot = 0
             self.nn_plot = 0
             self.nnc_plot = 0
+            self.cmp_plot = 0
+            self.cmpm_plot = 0
 
     def train_svm_classifier(self):
         if self.feedback_hhc:
@@ -323,6 +335,8 @@ class FeedbackHHCInterfaceGUI:
             self.svmm_plot = 0
             self.nn_plot = 0
             self.nnc_plot = 0
+            self.cmp_plot = 0
+            self.cmpm_plot = 0
 
     def train_decision_tree_regressor(self):
         if self.feedback_hhc:
@@ -349,6 +363,8 @@ class FeedbackHHCInterfaceGUI:
             self.svmm_plot = 0
             self.nn_plot = 0
             self.nnc_plot = 0
+            self.cmp_plot = 0
+            self.cmpm_plot = 0
 
     def train_svm_classifier_multi_class(self):
         if self.feedback_hhc:
@@ -385,6 +401,8 @@ class FeedbackHHCInterfaceGUI:
             self.svmm_plot = 1
             self.nn_plot = 0
             self.nnc_plot = 0
+            self.cmp_plot = 0
+            self.cmpm_plot = 0
 
     def train_decision_tree_classifier(self):
         if self.feedback_hhc:
@@ -418,6 +436,8 @@ class FeedbackHHCInterfaceGUI:
             self.svmm_plot = 0
             self.nn_plot = 0
             self.nnc_plot = 0
+            self.cmp_plot = 0
+            self.cmpm_plot = 0
 
     def train_decision_tree_classifier_multiclass(self):
         if self.feedback_hhc:
@@ -446,6 +466,8 @@ class FeedbackHHCInterfaceGUI:
             self.svmm_plot = 0
             self.nn_plot = 0
             self.nnc_plot = 0
+            self.cmp_plot = 0
+            self.cmpm_plot = 0
 
     def train_neural_network(self):
         if self.feedback_hhc:
@@ -475,6 +497,8 @@ class FeedbackHHCInterfaceGUI:
             self.svmm_plot = 0
             self.nn_plot = 1
             self.nnc_plot = 0
+            self.cmp_plot = 0
+            self.cmpm_plot = 0
 
     def train_neural_network_classifier(self):
         if self.feedback_hhc:
@@ -506,14 +530,98 @@ class FeedbackHHCInterfaceGUI:
             self.svmm_plot = 0
             self.nn_plot = 0
             self.nnc_plot = 1
+            self.cmp_plot = 0
+            self.cmpm_plot = 0
 
     def compare_models_performance(self):
         if self.feedback_hhc:
-            self.feedback_hhc.compare_models_performance()
+            results = self.feedback_hhc.compare_models_performance()
+
+            fpr_rf = results['fpr_rf']
+            tpr_rf = results['tpr_rf']
+            auc_rf = results['auc_rf']
+
+            fpr_svm = results['fpr_svm']
+            tpr_svm = results['tpr_svm']
+            auc_svm = results['auc_svm']
+
+            fpr_dt = results['fpr_dt']
+            tpr_dt = results['tpr_dt']
+            auc_dt = results['auc_dt']
+
+            fpr_nn = results['fpr_nn']
+            tpr_nn = results['tpr_nn']
+            auc_nn = results['auc_nn']
+
+            self.ax.clear()
+            self.ax.plot(fpr_rf, tpr_rf, color='darkorange', lw=2, label=f'Random Forest (AUC = {auc_rf:.2f})')
+            self.ax.plot(fpr_svm, tpr_svm, color='green', lw=2, label=f'SVM (AUC = {auc_svm:.2f})')
+            self.ax.plot(fpr_dt, tpr_dt, color='blue', lw=2, label=f'Decision Tree (AUC = {auc_dt:.2f})')
+            self.ax.plot(fpr_nn, tpr_nn, color='red', lw=2, label=f'Neural Network (AUC = {auc_nn:.2f})')
+            self.ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+            self.ax.set_xlabel('False Positive Rate')
+            self.ax.set_ylabel('True Positive Rate')
+            self.ax.set_title('Receiver Operating Characteristic Curve - Random Forest vs SVM vs Decision Tree vs Neural Network')
+            self.ax.legend(loc="lower right")
+            self.canvas.draw()
+
+            self.pca_plot = 0
+            self.rf_plot = 0
+            self.rfc_plot = 0
+            self.dtc_plot = 0
+            self.dtr_plot = 0
+            self.dtcm_plot = 0
+            self.svmc_plot = 0
+            self.svmm_plot = 0
+            self.nn_plot = 0
+            self.nnc_plot = 0
+            self.cmp_plot = 1
+            self.cmpm_plot = 0
 
     def compare_models_performance_multiclass(self):
         if self.feedback_hhc:
-            self.feedback_hhc.compare_models_performance_multiclass()
+            results = self.feedback_hhc.compare_models_performance_multiclass()
+
+            y = results['y']
+
+            fpr_rf = results['fpr_rf']
+            tpr_rf = results['tpr_rf']
+            roc_auc_rf = results['roc_auc_rf']
+
+            fpr_svm = results['fpr_svm']
+            tpr_svm = results['tpr_svm']
+            roc_auc_svm = results['roc_auc_svm']
+
+            fpr_dt = results['fpr_dt']
+            tpr_dt = results['tpr_dt']
+            roc_auc_dt = results['roc_auc_dt']
+
+            self.ax.clear()
+            for i in range(len(np.unique(y))):
+                self.ax.plot(fpr_rf[i], tpr_rf[i], lw=2, label=f'Random Forest Class {i} (AUC = {roc_auc_rf[i]:.2f})')
+                self.ax.plot(fpr_svm[i], tpr_svm[i], lw=2, label=f'SVM Class {i} (AUC = {roc_auc_svm[i]:.2f})')
+                self.ax.plot(fpr_dt[i], tpr_dt[i], lw=2, label=f'Decision Tree Class {i} (AUC = {roc_auc_dt[i]:.2f})')
+
+            self.ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+            self.ax.set_xlabel('False Positive Rate')
+            self.ax.set_ylabel('True Positive Rate')
+            self.ax.set_title(
+                'Receiver Operating Characteristic Curve - Random Forest vs SVM vs Decision Tree (Multi-Class)')
+            self.ax.legend(loc="lower right")
+            self.canvas.draw()
+
+            self.pca_plot = 0
+            self.rf_plot = 0
+            self.rfc_plot = 0
+            self.dtc_plot = 0
+            self.dtr_plot = 0
+            self.dtcm_plot = 0
+            self.svmc_plot = 0
+            self.svmm_plot = 0
+            self.nn_plot = 0
+            self.nnc_plot = 0
+            self.cmp_plot = 0
+            self.cmpm_plot = 1
 
 
 if __name__ == "__main__":

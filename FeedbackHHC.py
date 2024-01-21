@@ -632,6 +632,21 @@ class FeedbackHHC:
         plt.legend(loc='lower right')
         plt.show()
 
+        return {
+            'fpr_rf': fpr_rf,
+            'tpr_rf': tpr_rf,
+            'auc_rf': auc_rf,
+            'fpr_svm': fpr_svm,
+            'tpr_svm': tpr_svm,
+            'auc_svm': auc_svm,
+            'fpr_dt': fpr_dt,
+            'tpr_dt': tpr_dt,
+            'auc_dt': auc_dt,
+            'fpr_nn': fpr_nn,
+            'tpr_nn': tpr_nn,
+            'auc_nn': auc_nn
+        }
+
     def compare_models_performance_multiclass(self):
         X = self.data.drop('Quality of patient care star rating', axis=1)
         y = self.data['Quality of patient care star rating']
@@ -656,20 +671,32 @@ class FeedbackHHC:
         dt_classifier.fit(X_train, y_train)
         y_pred_prob_dt = dt_classifier.predict_proba(X_test)
 
+        fpr_rf = dict()
+        tpr_rf = dict()
+        roc_auc_rf = dict()
+
+        fpr_svm = dict()
+        tpr_svm = dict()
+        roc_auc_svm = dict()
+
+        fpr_dt = dict()
+        tpr_dt = dict()
+        roc_auc_dt = dict()
+
         plt.figure(figsize=(8, 6))
         for i in range(len(np.unique(y))):
-            fpr_rf, tpr_rf, _ = roc_curve(y_test[:, i], y_pred_prob_rf[:, i])
-            roc_auc_rf = auc(fpr_rf, tpr_rf)
+            fpr_rf[i], tpr_rf[i], _ = roc_curve(y_test[:, i], y_pred_prob_rf[:, i])
+            roc_auc_rf[i] = auc(fpr_rf[i], tpr_rf[i])
 
-            fpr_svm, tpr_svm, _ = roc_curve(y_test[:, i], y_pred_prob_svm[:, i])
-            roc_auc_svm = auc(fpr_svm, tpr_svm)
+            fpr_svm[i], tpr_svm[i], _ = roc_curve(y_test[:, i], y_pred_prob_svm[:, i])
+            roc_auc_svm[i] = auc(fpr_svm[i], tpr_svm[i])
 
-            fpr_dt, tpr_dt, _ = roc_curve(y_test[:, i], y_pred_prob_dt[:, i])
-            roc_auc_dt = auc(fpr_dt, tpr_dt)
+            fpr_dt[i], tpr_dt[i], _ = roc_curve(y_test[:, i], y_pred_prob_dt[:, i])
+            roc_auc_dt[i] = auc(fpr_dt[i], tpr_dt[i])
 
-            plt.plot(fpr_rf, tpr_rf, lw=2, label=f'Random Forest Class {i} (AUC = {roc_auc_rf:.2f})')
-            plt.plot(fpr_svm, tpr_svm, lw=2, label=f'SVM Class {i} (AUC = {roc_auc_svm:.2f})')
-            plt.plot(fpr_dt, tpr_dt, lw=2, label=f'Decision Tree Class {i} (AUC = {roc_auc_dt:.2f})')
+            plt.plot(fpr_rf[i], tpr_rf[i], lw=2, label=f'Random Forest Class {i} (AUC = {roc_auc_rf[i]:.2f})')
+            plt.plot(fpr_svm[i], tpr_svm[i], lw=2, label=f'SVM Class {i} (AUC = {roc_auc_svm[i]:.2f})')
+            plt.plot(fpr_dt[i], tpr_dt[i], lw=2, label=f'Decision Tree Class {i} (AUC = {roc_auc_dt[i]:.2f})')
 
         plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
         plt.xlabel('False Positive Rate')
@@ -677,3 +704,16 @@ class FeedbackHHC:
         plt.title('Receiver Operating Characteristic Curve - Random Forest vs SVM vs Decision Tree (Multi-Class)')
         plt.legend(loc='lower right')
         plt.show()
+
+        return {
+            'y': y,
+            'fpr_rf': fpr_rf,
+            'tpr_rf': tpr_rf,
+            'roc_auc_rf': roc_auc_rf,
+            'fpr_svm': fpr_svm,
+            'tpr_svm': tpr_svm,
+            'roc_auc_svm': roc_auc_svm,
+            'fpr_dt': fpr_dt,
+            'tpr_dt': tpr_dt,
+            'roc_auc_dt': roc_auc_dt,
+        }

@@ -21,6 +21,10 @@ class FeedbackHHCInterfaceGUI:
         self.dtc_plot = 0
         self.dtr_plot = 0
         self.dtcm_plot = 0
+        self.svmc_plot=0
+        self.svmm_plot=0
+        self.nn_plot=0
+        self.nnc_plot=0
         self.style = ttk.Style()
         self.style.theme_use("clam")
 
@@ -60,9 +64,15 @@ class FeedbackHHCInterfaceGUI:
                                                   command=self.train_random_forest_classifier, width=25)
         self.train_classifier_button.pack(pady=10, anchor="w", ipadx=5)
 
+
         self.train_svm_classifier_button = ttk.Button(button_frame, text="Train SVM Classifier",
                                                       command=self.train_svm_classifier, width=25)
         self.train_svm_classifier_button.pack(pady=10, anchor="w", ipadx=5)
+
+
+        self.train_svm_classifier_multi_class_button = ttk.Button(button_frame, text="Train SVM Multi-class",
+                                                      command=self.train_svm_classifier_multi_class, width=25)
+        self.train_svm_classifier_multi_class_button.pack(pady=10, anchor="w", ipadx=5)
 
         self.train_regressor_button = ttk.Button(button_frame, text="Train Decision Tree Regressor",
                                                  command=self.train_decision_tree_regressor, width=25)
@@ -76,6 +86,10 @@ class FeedbackHHCInterfaceGUI:
         self.train_decision_tree_classifier_button = ttk.Button(button_frame, text="ROC(Decision Tree Classifier)",
                                                                 command=self.train_decision_tree_classifier, width=25)
         self.train_decision_tree_classifier_button.pack(pady=10, anchor="w", ipadx=5)
+
+        self.train_neural_network_button = ttk.Button(button_frame, text="Train Neural Network",
+                                                                 command=self.train_neural_network, width=25)
+        self.train_neural_network_button.pack(pady=10, anchor="w", ipadx=5)
 
         self.train_neural_network_classifier_button = ttk.Button(button_frame, text="Train Neural Network Classifier",
                                                                  command=self.train_neural_network_classifier, width=25)
@@ -243,8 +257,32 @@ class FeedbackHHCInterfaceGUI:
             self.pca_plot = 0
 
     def train_svm_classifier(self):
-        if self.feedback_hhc:
-            self.feedback_hhc.train_svm_classifier()
+       if self.feedback_hhc:
+            results = self.feedback_hhc.train_svm_classifier()
+            y_test = results['y_test']
+            y_pred_prob = results['y_pred_prob']
+            accuracy = results['accuracy']
+            conf_matrix = results['conf_matrix']
+
+            fpr, tpr, _ = roc_curve(y_test, y_pred_prob[:, 1])
+            roc_auc = auc(fpr, tpr)
+
+            self.ax.clear()
+            self.ax.plot(fpr, tpr, color='darkorange', lw=2, label=f'AUC = {roc_auc:.2f}')
+            self.ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+            self.ax.set_xlabel('False Positive Rate')
+            self.ax.set_ylabel('True Positive Rate')
+            self.ax.set_title(f'Receiver operating characteristic -SVM Classifier \nAccuracy: {accuracy:.2f} , Confusion Matrix: \n{conf_matrix}')
+            self.ax.legend(loc='lower right')
+            self.canvas.draw()
+
+            self.pca_plot = 0
+            self.rf_plot = 0
+            self.rfc_plot = 0
+            self.dtc_plot = 0
+            self.dtr_plot = 0
+            self.dtcm_plot = 0
+            self.svmc_plot=1
 
     def train_decision_tree_regressor(self):
         if self.feedback_hhc:
@@ -266,6 +304,40 @@ class FeedbackHHCInterfaceGUI:
             self.pca_plot = 0
             self.dtc_plot = 0
             self.dtr_plot = 1
+
+    def train_svm_classifier_multi_class(self):
+        if self.feedback_hhc:
+            results = self.feedback_hhc.train_svm_classifier_multiclass()
+            y = results['y']
+            y_test = results['y_test']
+            y_pred_prob = results['y_pred_prob']
+
+            self.ax.clear()
+            for i in range(len(np.unique(y))):
+                fpr, tpr, _ = roc_curve(y_test[:, i], y_pred_prob[:, i])
+                roc_auc = auc(fpr, tpr)
+                self.ax.plot(fpr, tpr, lw=2, label=f'Class {i} (AUC = {roc_auc:.2f})')
+
+            self.ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+            self.ax.set_xlabel('False Positive Rate')
+            self.ax.set_ylabel('True Positive Rate')
+            self.ax.set_title(f'Receiver operating characteristic- SVM- Multi-class')
+            self.ax.legend(loc="lower right")
+            self.canvas.draw()
+
+            classes = np.unique(y)
+            for i in range(len(classes)):
+                class_auc = roc_auc_score(y_test[:, i], y_pred_prob[:, i])
+                print(f"AUC for Class '{classes[i]}': {class_auc:.2%}")
+
+            self.pca_plot = 0
+            self.rf_plot = 0
+            self.rfc_plot = 0
+            self.dtc_plot = 0
+            self.dtr_plot = 0
+            self.dtcm_plot = 0
+            self.svmc_plot=0
+            self.svmm_plot=1
 
     def train_decision_tree_classifier(self):
         if self.feedback_hhc:
@@ -317,9 +389,64 @@ class FeedbackHHCInterfaceGUI:
             self.dtr_plot = 0
             self.dtcm_plot = 1
 
+    def train_neural_network(self):
+        if self.feedback_hhc:
+            results = self.feedback_hhc.train_neural_network()
+            y_test = results['y_test']
+            test_predictions= results['test_predictions']
+            test_accuracy = results['test_accuracy']
+            self.ax.clear()
+
+            self.ax.scatter(y_test, test_predictions, color='green', label='Predicted')
+            self.ax.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], linestyle='--', color='red', linewidth=2)
+            self.ax.set_xlabel('Actual Values')
+            self.ax.set_ylabel('Predicted Values')
+            self.ax.set_title(f'Testing Data - Actual vs Predicted Values- Neural Network \nAccuracy: {test_accuracy:.2f}')
+            self.ax.legend()
+            self.canvas.draw()
+
+            self.pca_plot = 0
+            self.rf_plot = 0
+            self.rfc_plot = 0
+            self.dtc_plot = 0
+            self.dtr_plot = 0
+            self.dtcm_plot = 0
+            self.svmc_plot=0
+            self.svmm_plot=0
+            self.nn_plot=1
+
+    
     def train_neural_network_classifier(self):
         if self.feedback_hhc:
-            self.feedback_hhc.train_neural_network_classifier()
+            results = self.feedback_hhc.train_neural_network_classifier()
+            y_test = results['y_test']
+            y_test_pred= results['y_test_pred']
+
+            fpr, tpr, _ = roc_curve(y_test, y_test_pred)
+            roc_auc = auc(fpr, tpr)
+
+            self.ax.clear()
+            self.ax.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
+            self.ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+            self.ax.set_xlim([0.0, 1.0])
+            self.ax.set_ylim([0.0, 1.05])
+            self.ax.set_xlabel('False Positive Rate')
+            self.ax.set_ylabel('True Positive Rate')
+            self.ax.set_title('Receiver Operating Characteristic - Neural Network Classifier')
+            self.ax.legend(loc="lower right")
+            self.canvas.draw()
+
+            self.pca_plot = 0
+            self.rf_plot = 0
+            self.rfc_plot = 0
+            self.dtc_plot = 0
+            self.dtr_plot = 0
+            self.dtcm_plot = 0
+            self.svmc_plot=0
+            self.svmm_plot=0
+            self.nn_plot=0
+            self.nnc_plot=1
+
 
     def compare_models_performance(self):
         if self.feedback_hhc:

@@ -304,6 +304,13 @@ class FeedbackHHC:
         print("Confusion Matrix:")
         print(conf_matrix_df)
 
+        return {
+            'y_test': y_test,
+            'y_pred_prob': y_pred_prob,
+            'accuracy': accuracy,
+            'conf_matrix': conf_matrix
+        }
+
     def train_svm_classifier_multiclass(self):
         X = self.data.drop('Quality of patient care star rating', axis=1)
         y = self.data['Quality of patient care star rating']
@@ -338,6 +345,13 @@ class FeedbackHHC:
         for i in range(len(classes)):
             class_auc = roc_auc_score(y_test[:, i], y_pred_prob[:, i])
             print(f"AUC for Class '{classes[i]}': {class_auc:.2%}")
+
+        return {
+            'y': y,
+            'y_test': y_test,
+            'y_pred_prob': y_pred_prob
+        }
+
 
     def train_decision_tree_regressor(self):
         X = self.data.drop('Quality of patient care star rating', axis=1)
@@ -455,6 +469,12 @@ class FeedbackHHC:
         plt.legend()
         plt.tight_layout()
         plt.show()
+        return {
+            'y_test': y_test,
+            'test_predictions': test_predictions,
+            'test_accuracy' : test_accuracy
+        }
+
 
     def train_neural_network_classifier(self, batch_size=32):
 
@@ -506,6 +526,10 @@ class FeedbackHHC:
         plt.title('Receiver Operating Characteristic - Neural Network Classifier')
         plt.legend(loc="lower right")
         plt.show()
+        return {
+            'y_test':y_test,
+            'y_test_pred': y_test_pred
+        }
 
     def compare_models_performance(self):
         X = self.data.drop('Quality of patient care star rating', axis=1)

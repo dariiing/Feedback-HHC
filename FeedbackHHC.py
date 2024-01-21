@@ -351,7 +351,9 @@ class FeedbackHHC:
         y_pred = dt_regressor.predict(X_test)
 
         mse = mean_squared_error(y_test, y_pred)
-        print(f"Decision Tree Regressor Mean Squared Error: {mse:.2f}")
+
+        return {'mse': mse, 'y_test': y_test, 'y_pred': y_pred}
+
 
     def train_decision_tree_classifier(self):
         X = self.data.drop('Quality of patient care star rating', axis=1)
@@ -363,15 +365,12 @@ class FeedbackHHC:
         dt_classifier.fit(X_train, y_train)
 
         y_pred = dt_classifier.predict(X_test)
+        y_pred_prob = dt_classifier.predict_proba(X_test)
 
         accuracy = accuracy_score(y_test, y_pred)
-        print(f"Accuracy: {accuracy:.2f}")
-
         conf_matrix = confusion_matrix(y_test, y_pred)
-        conf_matrix_df = pd.DataFrame(conf_matrix, index=['Actual Negative', 'Actual Positive'],
-                                      columns=['Predicted Negative', 'Predicted Positive'])
-        print("Confusion Matrix:")
-        print(conf_matrix_df)
+
+        return {'y_test': y_test, 'y_pred_prob': y_pred_prob, 'accuracy': accuracy, 'conf_matrix': conf_matrix}
 
     def train_decision_tree_classifier_multiclass(self):
         X = self.data.drop('Quality of patient care star rating', axis=1)
@@ -386,23 +385,14 @@ class FeedbackHHC:
 
         y_pred_prob = dt_classifier.predict_proba(X_test)
 
-        plt.figure(figsize=(8, 6))
+        fpr = dict()
+        tpr = dict()
+        roc_auc = dict()
         for i in range(len(np.unique(y))):
-            fpr, tpr, _ = roc_curve(y_test[:, i], y_pred_prob[:, i])
-            roc_auc = auc(fpr, tpr)
-            plt.plot(fpr, tpr, lw=2, label=f'Class {i} (AUC = {roc_auc:.2f})')
+            fpr[i], tpr[i], _ = roc_curve(y_test[:, i], y_pred_prob[:, i])
+            roc_auc[i] = auc(fpr[i], tpr[i])
 
-        plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-        plt.xlabel('False Positive Rate')
-        plt.ylabel('True Positive Rate')
-        plt.title('Receiver Operating Characteristic Curve - Multi-Class Classification - Decision Tree')
-        plt.legend(loc='lower right')
-        plt.show()
-
-        classes = np.unique(y)
-        for i in range(len(classes)):
-            class_auc = roc_auc_score(y_test[:, i], y_pred_prob[:, i])
-            print(f"AUC for Class '{classes[i]}': {class_auc:.2%}")
+        return {'fpr': fpr, 'tpr': tpr, 'roc_auc': roc_auc}
 
     def train_neural_network(self, batch_size=32):
         X = self.data.drop('Quality of patient care star rating', axis=1)

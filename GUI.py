@@ -18,6 +18,9 @@ class FeedbackHHCInterfaceGUI:
         self.pca_plot = 0
         self.rf_plot = 0
         self.rfc_plot = 0
+        self.dtc_plot = 0
+        self.dtr_plot = 0
+        self.dtcm_plot = 0
         self.style = ttk.Style()
         self.style.theme_use("clam")
 
@@ -61,7 +64,16 @@ class FeedbackHHCInterfaceGUI:
                                                       command=self.train_svm_classifier, width=25)
         self.train_svm_classifier_button.pack(pady=10, anchor="w", ipadx=5)
 
-        self.train_decision_tree_classifier_button = ttk.Button(button_frame, text="Train Decision Tree Classifier",
+        self.train_regressor_button = ttk.Button(button_frame, text="Train Decision Tree Regressor",
+                                                 command=self.train_decision_tree_regressor, width=25)
+        self.train_regressor_button.pack(pady=10, anchor="w", ipadx=5)
+
+        self.train_decision_tree_classifier_button = ttk.Button(button_frame, text="ROC(Decision Tree Regressor)",
+                                                                command=self.train_decision_tree_classifier_multiclass,
+                                                                width=25)
+        self.train_decision_tree_classifier_button.pack(pady=10, anchor="w", ipadx=5)
+
+        self.train_decision_tree_classifier_button = ttk.Button(button_frame, text="ROC(Decision Tree Classifier)",
                                                                 command=self.train_decision_tree_classifier, width=25)
         self.train_decision_tree_classifier_button.pack(pady=10, anchor="w", ipadx=5)
 
@@ -94,6 +106,8 @@ class FeedbackHHCInterfaceGUI:
         if self.file_path:
             self.feedback_hhc = FeedbackHHC(self.file_path)
             messagebox.showinfo("Success", "Data loaded successfully!")
+        else:
+            messagebox.showinfo("Error", "An error occurred at data loading!")
 
     def preprocess_data(self):
         if self.feedback_hhc:
@@ -190,7 +204,8 @@ class FeedbackHHCInterfaceGUI:
             self.ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
             self.ax.set_xlabel('False Positive Rate')
             self.ax.set_ylabel('True Positive Rate')
-            self.ax.set_title(f'Receiver operating characteristic \nAccuracy: {accuracy:.2f} , Confusion Matrix: \n{conf_matrix}')
+            self.ax.set_title(
+                f'Receiver operating characteristic \nAccuracy: {accuracy:.2f} , Confusion Matrix: \n{conf_matrix}')
             self.ax.legend(loc="lower right")
             self.canvas.draw()
 
@@ -231,9 +246,76 @@ class FeedbackHHCInterfaceGUI:
         if self.feedback_hhc:
             self.feedback_hhc.train_svm_classifier()
 
+    def train_decision_tree_regressor(self):
+        if self.feedback_hhc:
+            results = self.feedback_hhc.train_decision_tree_regressor()
+            y_test = results['y_test']
+            y_pred = results['y_pred']
+            mse = results['mse']
+
+            self.ax.clear()
+            self.ax.scatter(y_test, y_pred, edgecolors=(0, 0, 0))
+            self.ax.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], 'k--', lw=4)
+            self.ax.set_xlabel('Actual')
+            self.ax.set_ylabel('Predicted')
+            self.ax.set_title(f'Decision Tree Regressor \nMean Squared Error: {mse:.2f}')
+            self.canvas.draw()
+
+            self.rfc_plot = 0
+            self.rf_plot = 0
+            self.pca_plot = 0
+            self.dtc_plot = 0
+            self.dtr_plot = 1
+
     def train_decision_tree_classifier(self):
         if self.feedback_hhc:
-            self.feedback_hhc.train_decision_tree_classifier()
+            results = self.feedback_hhc.train_decision_tree_classifier()
+            y_test = results['y_test']
+            y_pred_prob = results['y_pred_prob']
+            accuracy = results['accuracy']
+            conf_matrix = results['conf_matrix']
+            fpr_0, tpr_0, _ = roc_curve(y_test, y_pred_prob[:, 0])
+            roc_auc_0 = auc(fpr_0, tpr_0)
+            fpr_1, tpr_1, _ = roc_curve(y_test, y_pred_prob[:, 1])
+            roc_auc_1 = auc(fpr_1, tpr_1)
+            self.ax.clear()
+            self.ax.plot(fpr_0, tpr_0, color='darkorange', lw=2, label='AUC(Class 0) (area = %0.2f)' % roc_auc_0)
+            self.ax.plot(fpr_1, tpr_1, color='green', lw=2, label='AUC(Class 1) (area = %0.2f)' % roc_auc_1)
+            self.ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+            self.ax.set_xlabel('False Positive Rate')
+            self.ax.set_ylabel('True Positive Rate')
+            self.ax.set_title(
+                f'Receiver operating characteristic \nAccuracy: {accuracy:.2f} , Confusion Matrix: \n{conf_matrix}')
+            self.ax.legend(loc="lower right")
+            self.canvas.draw()
+            self.rfc_plot = 0
+            self.rf_plot = 0
+            self.pca_plot = 0
+            self.dtc_plot = 1
+
+    def train_decision_tree_classifier_multiclass(self):
+        if self.feedback_hhc:
+            results = self.feedback_hhc.train_decision_tree_classifier_multiclass()
+            fpr = results['fpr']
+            tpr = results['tpr']
+            roc_auc = results['roc_auc']
+
+            self.ax.clear()
+            for i in range(len(fpr)):
+                self.ax.plot(fpr[i], tpr[i], lw=2, label=f'Class {i} (AUC = {roc_auc[i]:.2f})')
+            self.ax.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+            self.ax.set_xlabel('False Positive Rate')
+            self.ax.set_ylabel('True Positive Rate')
+            self.ax.set_title('Receiver Operating Characteristic Curve - Multi-Class Classification - Decision Tree')
+            self.ax.legend(loc='lower right')
+            self.canvas.draw()
+
+            self.rfc_plot = 0
+            self.rf_plot = 0
+            self.pca_plot = 0
+            self.dtc_plot = 0
+            self.dtr_plot = 0
+            self.dtcm_plot = 1
 
     def train_neural_network_classifier(self):
         if self.feedback_hhc:

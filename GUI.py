@@ -27,6 +27,7 @@ class FeedbackHHCInterfaceGUI:
         self.nnc_plot = 0
         self.cmp_plot = 0
         self.cmpm_plot = 0
+        self.svmm_plot = 0
         self.style = ttk.Style()
         self.style.theme_use("clam")
 
@@ -34,7 +35,7 @@ class FeedbackHHCInterfaceGUI:
         main_frame.pack(fill="both", expand=True)
 
         button_frame = tk.Frame(main_frame, width=200, bg="lightgray")
-        button_frame.pack(side="left", fill="y", padx=10)
+        button_frame.pack(side="left", fill="y", padx=5)
 
         style = ttk.Style()
         style.configure("TButton", padding=(10, 5, 10, 5), font=('Helvetica', 10))
@@ -65,6 +66,10 @@ class FeedbackHHCInterfaceGUI:
         self.train_classifier_button = ttk.Button(button_frame, text="ROC(Random Forest Classifier)",
                                                   command=self.train_random_forest_classifier, width=25)
         self.train_classifier_button.pack(pady=10, anchor="w", ipadx=5)
+
+        # self.train_regressor_button = ttk.Button(button_frame, text="Train SVM Regressor",
+        #                                          command=self.train_svm_regressor, width=25)
+        # self.train_regressor_button.pack(pady=10, anchor="w", ipadx=5)
 
         self.train_svm_classifier_button = ttk.Button(button_frame, text="ROC(SVM Classifier)",
                                                       command=self.train_svm_classifier, width=25)
@@ -303,6 +308,38 @@ class FeedbackHHCInterfaceGUI:
             self.nnc_plot = 0
             self.cmp_plot = 0
             self.cmpm_plot = 0
+
+    def train_svm_regressor(self):
+        if self.feedback_hhc:
+            self.rf_plot = 0
+            self.pca_plot = 0
+            self.rfc_plot = 0
+            self.dtc_plot = 0
+            self.dtr_plot = 0
+            self.dtcm_plot = 0
+            self.svmc_plot = 0
+            self.svmm_plot = 1
+            self.nn_plot = 0
+            self.nnc_plot = 0
+            self.cmp_plot = 0
+            self.cmpm_plot = 0
+            results = self.feedback_hhc.train_svm_regressor()
+            y_test = results['y_test']
+            y_pred_rounded = results['y_pred_rounded']
+            mae = results['mae']
+            r2 = results['r2']
+
+            self.ax.clear()
+
+            self.ax.scatter(y_test, y_pred_rounded, color='blue')
+            self.ax.plot([y_test.min(), y_test.max()], [y_test.min(), y_test.max()], linestyle='--', color='red',
+                         linewidth=2)
+            self.ax.set_xlabel('Actual Values')
+            self.ax.set_ylabel('Predicted Values (Rounded)')
+            self.ax.set_title(
+                f'Actual vs Predicted Values - SVM Regressor (Rounded)\nMAE: {mae:.2f}, R2: {r2:.2f}')
+
+            self.canvas.draw()
 
     def train_svm_classifier(self):
         if self.feedback_hhc:
@@ -626,6 +663,6 @@ class FeedbackHHCInterfaceGUI:
 
 if __name__ == "__main__":
     root = tk.Tk()
-    root.geometry("1200x800")
+    root.geometry("1200x1000")
     app = FeedbackHHCInterfaceGUI(root)
     root.mainloop()

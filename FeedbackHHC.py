@@ -1,5 +1,7 @@
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
+from sklearn.svm import SVR
+
 from sklearn.metrics import roc_curve, auc, accuracy_score, confusion_matrix, roc_auc_score, classification_report
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import mean_absolute_error, \
@@ -267,6 +269,39 @@ class FeedbackHHC:
             'y_pred_prob': y_pred_prob
         }
 
+    def train_svm_regressor(self):
+        X = self.data.drop('Quality of patient care star rating', axis=1)
+        y = self.data['Quality of patient care star rating']
+
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+        svm_regressor = SVR(kernel='rbf', C=100, gamma=0.1, epsilon=.1)
+
+        svm_regressor.fit(X_train, y_train)
+
+        y_pred = svm_regressor.predict(X_test)
+
+        # increment pentru rotunjirea valorilor prezise
+        increment = 0.5
+
+        y_pred_rounded = [round(pred / increment) * increment for pred in y_pred]
+
+        output_tuples = [(f"Predicted: {pred:.2f}", f"Actual: {val:.2f}") for pred, val in
+                         zip(y_pred_rounded, y_test.values)]
+
+        for predicted, actual in output_tuples:
+            print(predicted, actual)
+
+        mae = mean_absolute_error(y_test, y_pred)
+        r2 = r2_score(y_test, y_pred)
+
+        return {
+            'y_test': y_test,
+            'y_pred_rounded': y_pred_rounded,
+            'mae': mae,
+            'r2': r2
+        }
+
     def train_svm_classifier(self):
         X = self.data.drop('Quality of patient care star rating', axis=1)
         y = np.where(self.data['Quality of patient care star rating'] > 3.5, 1, 0)
@@ -352,7 +387,6 @@ class FeedbackHHC:
             'y_pred_prob': y_pred_prob
         }
 
-
     def train_decision_tree_regressor(self):
         X = self.data.drop('Quality of patient care star rating', axis=1)
         y = self.data['Quality of patient care star rating']
@@ -367,7 +401,6 @@ class FeedbackHHC:
         mse = mean_squared_error(y_test, y_pred)
 
         return {'mse': mse, 'y_test': y_test, 'y_pred': y_pred}
-
 
     def train_decision_tree_classifier(self):
         X = self.data.drop('Quality of patient care star rating', axis=1)
@@ -472,9 +505,8 @@ class FeedbackHHC:
         return {
             'y_test': y_test,
             'test_predictions': test_predictions,
-            'test_accuracy' : test_accuracy
+            'test_accuracy': test_accuracy
         }
-
 
     def train_neural_network_classifier(self, batch_size=32):
 
@@ -527,7 +559,7 @@ class FeedbackHHC:
         plt.legend(loc="lower right")
         plt.show()
         return {
-            'y_test':y_test,
+            'y_test': y_test,
             'y_test_pred': y_test_pred
         }
 

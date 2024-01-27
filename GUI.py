@@ -67,9 +67,9 @@ class FeedbackHHCInterfaceGUI:
                                                   command=self.train_random_forest_classifier, width=25)
         self.train_classifier_button.pack(pady=10, anchor="w", ipadx=5)
 
-        # self.train_regressor_button = ttk.Button(button_frame, text="Train SVM Regressor",
-        #                                          command=self.train_svm_regressor, width=25)
-        # self.train_regressor_button.pack(pady=10, anchor="w", ipadx=5)
+        self.train_regressor_button = ttk.Button(button_frame, text="Train SVM Regressor",
+                                                 command=self.train_svm_regressor, width=25)
+        self.train_regressor_button.pack(pady=10, anchor="w", ipadx=5)
 
         self.train_svm_classifier_button = ttk.Button(button_frame, text="ROC(SVM Classifier)",
                                                       command=self.train_svm_classifier, width=25)

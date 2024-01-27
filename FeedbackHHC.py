@@ -408,7 +408,7 @@ class FeedbackHHC:
 
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-        dt_classifier = DecisionTreeClassifier(random_state=42)
+        dt_classifier = DecisionTreeClassifier(max_depth=5, min_samples_leaf=10,random_state=42)
         dt_classifier.fit(X_train, y_train)
 
         y_pred = dt_classifier.predict(X_test)
@@ -427,7 +427,7 @@ class FeedbackHHC:
 
         X_train, X_test, y_train, y_test = train_test_split(X, y_bin, test_size=0.2, random_state=42)
 
-        dt_classifier = OneVsRestClassifier(DecisionTreeClassifier(random_state=42))
+        dt_classifier = OneVsRestClassifier(DecisionTreeClassifier(max_depth=5, min_samples_leaf=10,random_state=42))
         dt_classifier.fit(X_train, y_train)
 
         y_pred_prob = dt_classifier.predict_proba(X_test)
@@ -585,7 +585,7 @@ class FeedbackHHC:
         accuracy_svm = accuracy_score(y_test, y_pred_svm)
         auc_svm = roc_auc_score(y_test, svm_classifier.predict_proba(X_test_scaled)[:, 1])
 
-        dt_classifier = DecisionTreeClassifier(random_state=42)
+        dt_classifier = DecisionTreeClassifier(max_depth=5, min_samples_leaf=10,random_state=42)
         dt_classifier.fit(X_train, y_train)
         y_pred_dt = dt_classifier.predict(X_test)
         accuracy_dt = accuracy_score(y_test, y_pred_dt)
@@ -699,7 +699,7 @@ class FeedbackHHC:
         svm_classifier.fit(X_train_scaled, y_train)
         y_pred_prob_svm = svm_classifier.predict_proba(X_test_scaled)
 
-        dt_classifier = OneVsRestClassifier(DecisionTreeClassifier(random_state=42))
+        dt_classifier = OneVsRestClassifier(DecisionTreeClassifier(max_depth=5, min_samples_leaf=10,random_state=42))
         dt_classifier.fit(X_train, y_train)
         y_pred_prob_dt = dt_classifier.predict_proba(X_test)
 
